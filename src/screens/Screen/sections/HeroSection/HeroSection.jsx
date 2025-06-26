@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { Button } from "../../../../components/ui/button";
 import { Typewriter } from "react-simple-typewriter";
+import { Link } from "react-router-dom";
 
 export const HeroSection = () => {
   const meetGradientRef = useRef(null);
@@ -64,13 +65,15 @@ export const HeroSection = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col items-center space-y-4 pt-8">
-              <Button
-                variant="outline"
-                className="rounded-full bg-zinc-950 text-zinc-400 border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300 relative"
-              >
-                <span>Start networking</span>
-                <div className="absolute w-[102px] h-px -bottom-px left-1/2 transform -translate-x-1/2 bg-[linear-gradient(90deg,rgba(34,211,238,0)_0%,rgba(34,211,238,0.9)_50%,rgba(34,211,238,0)_100%)]" />
-              </Button>
+              <Link to="/search">
+                <Button
+                  variant="outline"
+                  className="rounded-full bg-zinc-950 text-zinc-400 border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300 relative"
+                >
+                  <span>Start networking</span>
+                  <div className="absolute w-[102px] h-px -bottom-px left-1/2 transform -translate-x-1/2 bg-[linear-gradient(90deg,rgba(34,211,238,0)_0%,rgba(34,211,238,0.9)_50%,rgba(34,211,238,0)_100%)]" />
+                </Button>
+              </Link>
 
               {/* Learn More scroll button */}
               <div

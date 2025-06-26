@@ -1,4 +1,37 @@
 {
-  "nodes": [],
-  "edges": []
+  "nodes": [
+    {
+      "id": "src/screens/Screen/Screen.jsx",
+      "label": "Screen",
+      "routes": [
+        "/"
+      ],
+      "isRoot": true
+    },
+    {
+      "id": "src/screens/SearchPage/SearchPage.jsx",
+      "label": "SearchPage",
+      "routes": [
+        "/search"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "src\\screens\\Screen\\sections\\NavigationSection\\NavigationSection.jsx:22:8-to-src\\screens\\SearchPage\\SearchPage.jsx",
+      "source": "src\\screens\\Screen\\Screen.jsx",
+      "target": "src\\screens\\SearchPage\\SearchPage.jsx",
+      "data": {
+        "viaRoute": "/search",
+        "trigger": {
+          "element": "<Link to=\"/search\">\r\n          <Button\r\n            variant=\"outline\"\r\n            className=\"h-9 rounded-full bg-zinc-950 text-zinc-400 text-[13.9px] font-normal px-3.5 relative overflow-hidden border-[#ffffff1a] shadow-none hover:text-zinc-300\"\r\n          >\r\n            Start networking\r\n            <div className=\"absolute w-[103px] h-px bottom-0 left-[18px] bg-[linear-gradient(90deg,rgba(34,211,238,0)_0%,rgba(34,211,238,0.9)_50%,rgba(34,211,238,0)_100%)]\" />\r\n          </Button>\r\n        </Link>",
+          "line": 22,
+          "endLine": 30,
+          "column": 8,
+          "endColumn": 15,
+          "sourceFile": "src\\screens\\Screen\\sections\\NavigationSection\\NavigationSection.jsx"
+        }
+      }
+    }
+  ]
 }

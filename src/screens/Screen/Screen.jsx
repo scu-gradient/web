@@ -17,3 +17,5 @@ export const Screen = () => {
     </div>
   );
 };
+
+export default Screen;

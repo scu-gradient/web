@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "../../../../components/ui/button";
+import { Link } from "react-router-dom";
 
 export const FooterSection = () => {
   return (
@@ -35,12 +36,14 @@ export const FooterSection = () => {
           {/* Button */}
           <div className="relative">
             <div className="absolute w-[102px] h-px bottom-0 left-1/2 -translate-x-1/2 bg-[linear-gradient(90deg,rgba(34,211,238,0)_0%,rgba(34,211,238,0.9)_50%,rgba(34,211,238,0)_100%)]" />
-            <Button
-              variant="outline"
-              className="rounded-full h-9 px-3 bg-zinc-950 text-zinc-400 text-[13.9px] [font-family:'Inter',Helvetica] font-normal border-[#ffffff1a] shadow-[0px_0px_0px_#ffffff,0px_0px_0px_1px_#ffffff1a,0px_0px_0px_transparent]"
-            >
-              Start Networking
-            </Button>
+            <Link to="/search">
+              <Button
+                variant="outline"
+                className="rounded-full h-9 px-3 bg-zinc-950 text-zinc-400 text-[13.9px] [font-family:'Inter',Helvetica] font-normal border-[#ffffff1a] shadow-[0px_0px_0px_#ffffff,0px_0px_0px_1px_#ffffff1a,0px_0px_0px_transparent]"
+              >
+                Start Networking
+              </Button>
+            </Link>
           </div>
         </div>
 

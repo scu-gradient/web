@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "../../../../components/ui/button";
+import { Link } from "react-router-dom";
 
 export const NavigationSection = () => {
   return (
@@ -18,13 +19,15 @@ export const NavigationSection = () => {
           Blog
         </a>
 
-        <Button
-          variant="outline"
-          className="h-9 rounded-full bg-zinc-950 text-zinc-400 text-[13.9px] font-normal px-3.5 relative overflow-hidden border-[#ffffff1a] shadow-none hover:text-zinc-300"
-        >
-          Start networking
-          <div className="absolute w-[103px] h-px bottom-0 left-[18px] bg-[linear-gradient(90deg,rgba(34,211,238,0)_0%,rgba(34,211,238,0.9)_50%,rgba(34,211,238,0)_100%)]" />
-        </Button>
+        <Link to="/search">
+          <Button
+            variant="outline"
+            className="h-9 rounded-full bg-zinc-950 text-zinc-400 text-[13.9px] font-normal px-3.5 relative overflow-hidden border-[#ffffff1a] shadow-none hover:text-zinc-300"
+          >
+            Start networking
+            <div className="absolute w-[103px] h-px bottom-0 left-[18px] bg-[linear-gradient(90deg,rgba(34,211,238,0)_0%,rgba(34,211,238,0.9)_50%,rgba(34,211,238,0)_100%)]" />
+          </Button>
+        </Link>
       </nav>
     </header>
   );
