@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+.screen-graph.json
+
+
+firebase.js
 
 # Editor directories and files
 .vscode/*

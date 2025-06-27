@@ -32,6 +32,38 @@
           "sourceFile": "src\\screens\\Screen\\sections\\NavigationSection\\NavigationSection.jsx"
         }
       }
+    },
+    {
+      "id": "src\\screens\\Screen\\sections\\HeroSection\\HeroSection.jsx:68:14-to-src\\screens\\SearchPage\\SearchPage.jsx",
+      "source": "src\\screens\\Screen\\Screen.jsx",
+      "target": "src\\screens\\SearchPage\\SearchPage.jsx",
+      "data": {
+        "viaRoute": "/search",
+        "trigger": {
+          "element": "<Link to=\"/search\">\r\n                <Button\r\n                  variant=\"outline\"\r\n                  className=\"rounded-full bg-zinc-950 text-zinc-400 border-zinc-800 hover:bg-zinc-900 hover:text-zinc-300 relative\"\r\n                >\r\n                  <span>Start networking</span>\r\n                  <div className=\"absolute w-[102px] h-px -bottom-px left-1/2 transform -translate-x-1/2 bg-[linear-gradient(90deg,rgba(34,211,238,0)_0%,rgba(34,211,238,0.9)_50%,rgba(34,211,238,0)_100%)]\" />\r\n                </Button>\r\n              </Link>",
+          "line": 68,
+          "endLine": 76,
+          "column": 14,
+          "endColumn": 21,
+          "sourceFile": "src\\screens\\Screen\\sections\\HeroSection\\HeroSection.jsx"
+        }
+      }
+    },
+    {
+      "id": "src\\screens\\Screen\\sections\\FooterSection\\FooterSection.jsx:39:12-to-src\\screens\\SearchPage\\SearchPage.jsx",
+      "source": "src\\screens\\Screen\\Screen.jsx",
+      "target": "src\\screens\\SearchPage\\SearchPage.jsx",
+      "data": {
+        "viaRoute": "/search",
+        "trigger": {
+          "element": "<Link to=\"/search\">\r\n              <Button\r\n                variant=\"outline\"\r\n                className=\"rounded-full h-9 px-3 bg-zinc-950 text-zinc-400 text-[13.9px] [font-family:'Inter',Helvetica] font-normal border-[#ffffff1a] shadow-[0px_0px_0px_#ffffff,0px_0px_0px_1px_#ffffff1a,0px_0px_0px_transparent]\"\r\n              >\r\n                Start Networking\r\n              </Button>\r\n            </Link>",
+          "line": 39,
+          "endLine": 46,
+          "column": 12,
+          "endColumn": 19,
+          "sourceFile": "src\\screens\\Screen\\sections\\FooterSection\\FooterSection.jsx"
+        }
+      }
     }
   ]
 }

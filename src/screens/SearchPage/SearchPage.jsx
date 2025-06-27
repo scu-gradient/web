@@ -1,113 +1,266 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, MapPin, Building, Calendar, ExternalLink, Mail, Briefcase, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+import { db } from '../../firebase';
+import { collection, query, getDocs, where, limit as fbLimit } from "firebase/firestore";
 
 const SearchPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [error, setError] = useState(null);
+    const [totalProfiles, setTotalProfiles] = useState(0);
 
-    // mock profiles
-    const mockProfiles = [
-        {
-            id: 1,
-            name: "Teresa Pan",
-            initials: "TP",
-            match: 90,
-            location: "United States",
-            title: "General Manager at Northwestern Fintech Club",
-            education: "Bachelor's degree at Northwestern University",
-            color: "bg-emerald-500",
-            fullProfile: {
-                about: "Management team leader directing finances for the club by serving as the primary officer for SOFO account. Maintaining connections with corporate sponsors.",
-                experiences: [
-                    {
-                        title: "General Manager",
-                        company: "Northwestern Fintech Club",
-                        duration: "Apr 2022 - Present",
-                        description: "Management team leader Direct finances for the club by serving as the primary officer for our SOFO account Maintain connections with our corporate sponsors"
-                    },
-                    {
-                        title: "Accounting Intern",
-                        company: "Virtualtics",
-                        duration: "Jan 2024 - Jun 2024",
-                        description: ""
-                    },
-                    {
-                        title: "Treasury Intern",
-                        company: "Workiva",
-                        duration: "Jun 2023 - Sep 2023",
-                        description: "Responsible for analyzing cash flow, transferring funds across entities, and aiding in the quarterly intercompany settlement. Familiarized myself with how treasury operates internationally, including various transfer methods and their differences. Reported on bank fees, incorporating R (tidyverse, patchwork, scales, gtExtras) to better visualize trends"
-                    },
-                    {
-                        title: "Financial Assistant - SOFO",
-                        company: "Northwestern University",
-                        duration: "Jan 2022 - Jun 2023",
-                        description: "Served as a general accountant for Northwestern's 400+ active student organizations. Processed payments, reimbursements, transfer, and purchase order requests. Used MS Suite (Access, Excel, Word, Outlook) and Cougar Mountain/Denali Accounting Software. In the SY21-22, the office handled $11.5m incoming funds, $11.3m disbursed funds, and a total of 13,572 transactions"
-                    }
-                ]
+    // Replace with your actual API endpoint
+    const API_ENDPOINT = 'https://similarity-search-ygzppckila-uc.a.run.app/';
+
+    // Function to transform API response to frontend format
+    const transformApiResponse = (apiData) => {
+        // Handle both single profile and array of profiles
+        const profiles = Array.isArray(apiData) ? apiData : [apiData];
+        
+        return profiles.map((profile, index) => {
+            // Extract experiences from the flat structure
+            const experiences = [];
+            
+            // Extract experience 1
+            if (profile.experience_1_title || profile.experience_1_company) {
+                experiences.push({
+                    title: profile.experience_1_title || 'Position',
+                    company: profile.experience_1_company || 'Company',
+                    duration: profile.experience_1_duration || '',
+                    description: profile.experience_1_description || ''
+                });
             }
-        },
-        {
-            id: 2,
-            name: "Ayush Shukla Arora",
-            initials: "AA",
-            match: 89,
-            location: "Evanston, Illinois",
-            title: "Researcher at tilt Lab",
-            education: "Bachelor's degree at Northwestern University",
-            color: "bg-cyan-500"
-        },
-        {
-            id: 3,
-            name: "Fernando Gutierrez",
-            initials: "FG",
-            match: 89,
-            location: "United States",
-            title: "Economics at Northwestern University",
-            education: "",
-            color: "bg-blue-500"
-        },
-        {
-            id: 4,
-            name: "Mercy Muiruri",
-            initials: "MM",
-            match: 89,
-            location: "Evanston, Illinois",
-            title: "Software Developer- Formula Racing FSAE at Northwestern Formula Racing",
-            education: "Bachelor of Science - BS at Northwestern University",
-            color: "bg-pink-500"
-        },
-        {
-            id: 5,
-            name: "Sharon Lin",
-            initials: "SL",
-            match: 89,
-            location: "Greater Chicago Area",
-            title: "Incoming Analyst at Cornerstone Research",
-            education: "Master of Science - MS at Northwestern University",
-            color: "bg-indigo-500"
-        }
-    ];
-
-    useEffect(() => {
-        if (searchQuery.trim()) {
-            setIsSearching(true);
-            // Simulate API call delay
-            setTimeout(() => {
-                setSearchResults(mockProfiles);
-                setIsSearching(false);
-            }, 500);
-        } else {
-            setSearchResults([]);
-        }
-    }, [searchQuery]);
-
-    const handleSearch = (query) => {
-        setSearchQuery(query);
-        setSelectedProfile(null);
+            
+            // Extract experience 2
+            if (profile.experience_2_title || profile.experience_2_company) {
+                experiences.push({
+                    title: profile.experience_2_title || 'Position',
+                    company: profile.experience_2_company || 'Company',
+                    duration: profile.experience_2_duration || '',
+                    description: profile.experience_2_description || ''
+                });
+            }
+            
+            // Extract experience 3
+            if (profile.experience_3_title || profile.experience_3_company) {
+                experiences.push({
+                    title: profile.experience_3_title || 'Position',
+                    company: profile.experience_3_company || 'Company',
+                    duration: profile.experience_3_duration || '',
+                    description: profile.experience_3_description || ''
+                });
+            }
+            
+            // Add current role as first experience if different
+            if (profile.current_role_title || profile.current_role_company) {
+                const currentRole = {
+                    title: profile.current_role_title || 'Position',
+                    company: profile.current_role_company || 'Company',
+                    duration: profile.current_role_duration || '',
+                    description: profile.current_role_description || ''
+                };
+                
+                // Check if current role is different from existing experiences
+                const isDuplicate = experiences.some(exp => 
+                    exp.title === currentRole.title && exp.company === currentRole.company
+                );
+                
+                if (!isDuplicate) {
+                    experiences.unshift(currentRole);
+                }
+            }
+            
+            // Build education string
+            let education = '';
+            if (profile.highest_education_degree || profile.highest_education_school) {
+                education = `${profile.highest_education_degree || ''} at ${profile.highest_education_school || ''}`.trim();
+                if (profile.highest_education_year) {
+                    education += ` (${profile.highest_education_year})`;
+                }
+                if (profile.highest_education_field) {
+                    education += ` - ${profile.highest_education_field}`;
+                }
+            }
+            
+            return {
+                id: profile.id || `profile_${index}`,
+                name: profile.full_name || profile.name || 'Unknown',
+                initials: getInitials(profile.full_name || profile.name || 'Unknown'),
+                match: Math.round((Math.sqrt(1 - Math.pow((profile.similarity || 0) - 1, 2))) * 100),
+                location: profile.location || 'Location not specified',
+                title: profile.headline || profile.current_role_title || profile.title || 'Title not specified',
+                education: education,
+                color: profile.color || getRandomColor(index),
+                linkedin_url: profile.linkedin_url || profile.metadata?.linkedin_url,
+                fullProfile: {
+                    about: profile.about || profile.fullProfile?.about || '',
+                    experiences: experiences
+                },
+                // Keep original data for debugging
+                _originalData: profile
+            };
+        });
     };
+
+    // Function to search profiles via your API
+    const searchProfiles = async (query, limit = 20) => {
+        try {
+            setIsSearching(true);
+            setError(null);
+
+            const response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: query,
+                    limit: limit
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API request failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Raw API response:', data);
+
+            // Transform the API response to match frontend format
+            let transformedResults = [];
+            
+            if (data.results && Array.isArray(data.results)) {
+                // API returns { results: [...] } format
+                transformedResults = transformApiResponse(data.results);
+            } else if (Array.isArray(data)) {
+                // API returns array directly
+                transformedResults = transformApiResponse(data);
+            } else if (data.id || data.full_name) {
+                // API returns single profile object
+                transformedResults = transformApiResponse([data]);
+            } else {
+                console.warn('Unexpected API response format:', data);
+                transformedResults = [];
+            }
+
+            setSearchResults(transformedResults);
+            setTotalProfiles(data.total_profiles || data.count || transformedResults.length);
+
+        } catch (err) {
+            console.error('Search error:', err);
+            setError(err.message);
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    // Backup Firestore search function (for fallback or testing)
+    const searchProfilesFromFirestore = async (queryText, limitCount = 20) => {
+        try {
+            setIsSearching(true);
+            setError(null);
+
+            const profilesRef = collection(db, 'profiles');
+            const q = query(profilesRef, fbLimit(limitCount));
+            const querySnapshot = await getDocs(q);
+
+            const results = querySnapshot.docs.map((doc, index) => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    name: data.name || 'Unknown',
+                    initials: getInitials(data.name || 'Unknown'),
+                    match: 100,
+                    location: data.location || 'Location not specified',
+                    title: data.title || 'Title not specified',
+                    education: data.education || '',
+                    color: getRandomColor(index),
+                    fullProfile: {
+                        about: data.about || '',
+                        experiences: data.experiences || []
+                    }
+                };
+            });
+
+            setSearchResults(results);
+            setTotalProfiles(results.length);
+        } catch (err) {
+            console.error('Firestore search error:', err);
+            setError(err.message);
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    // Helper function to get initials from name
+    const getInitials = (name) => {
+        if (!name) return 'U';
+        return name
+            .split(' ')
+            .map(word => word.charAt(0))
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    // Helper function to get consistent colors
+    const getRandomColor = (index) => {
+        const colors = [
+            'bg-emerald-500',
+            'bg-cyan-500',
+            'bg-blue-500',
+            'bg-pink-500',
+            'bg-indigo-500',
+            'bg-purple-500',
+            'bg-orange-500',
+            'bg-green-500',
+            'bg-red-500',
+            'bg-yellow-500'
+        ];
+        return colors[index % colors.length];
+    };
+
+    // Handle search input changes
+    const handleSearch = (value) => {
+        setSearchQuery(value);
+    };
+
+    // Retry search function
+    const retrySearch = () => {
+        if (searchQuery.trim()) {
+            performSearch(searchQuery.trim());
+        }
+    };
+
+    // Main search function that decides which method to use
+    const performSearch = async (query) => {
+        try {
+            await searchProfiles(query);
+        } catch (error) {
+            console.log('API search failed, attempting to fall back to another method:', error);
+            await searchProfilesFromFirestore(query); 
+        }
+    };
+
+    // Debounced search effect
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (searchQuery.trim()) {
+                performSearch(searchQuery.trim());
+            } else {
+                setSearchResults([]);
+                setTotalProfiles(0);
+                setError(null);
+            }
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
 
     if (selectedProfile) {
         const profile = selectedProfile.fullProfile || {};
@@ -142,22 +295,17 @@ const SearchPage = () => {
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-zinc-950 border-zinc-800 hover:bg-zinc-900 text-zinc-300"
-                                >
-                                    <ExternalLink className="w-4 h-4 mr-2" />
-                                    LinkedIn
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-zinc-950 border-zinc-800 hover:bg-zinc-900 text-zinc-300"
-                                >
-                                    <Mail className="w-4 h-4 mr-2" />
-                                    Contact
-                                </Button>
+                                {selectedProfile.linkedin_url && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="bg-zinc-950 border-zinc-800 hover:bg-zinc-900 text-zinc-300"
+                                        onClick={() => window.open(selectedProfile.linkedin_url, '_blank')}
+                                    >
+                                        <ExternalLink className="w-4 h-4 mr-2" />
+                                        LinkedIn
+                                    </Button>
+                                )}
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -192,33 +340,41 @@ const SearchPage = () => {
                             Experience
                         </h2>
                         <div className="space-y-6">
-                            {profile.experiences?.map((exp, index) => (
-                                <div key={index} className="relative">
-                                    <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-all duration-300">
-                                        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
-                                            <div className="flex-1">
-                                                <h3 className="font-bold text-xl text-white mb-2">{exp.title}</h3>
-                                                <p className="text-transparent bg-clip-text bg-gradient-to-br from-[#22D3EE] to-[#006ADC] font-medium mb-2 flex items-center">
-                                                    <Building className="w-4 h-4 mr-2 text-cyan-400" />
-                                                    {exp.company}
-                                                </p>
+                            {profile.experiences?.length > 0 ? (
+                                profile.experiences.map((exp, index) => (
+                                    <div key={index} className="relative">
+                                        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-all duration-300">
+                                            <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+                                                <div className="flex-1">
+                                                    <h3 className="font-bold text-xl text-white mb-2">{exp.title}</h3>
+                                                    <p className="text-transparent bg-clip-text bg-gradient-to-br from-[#22D3EE] to-[#006ADC] font-medium mb-2 flex items-center">
+                                                        <Building className="w-4 h-4 mr-2 text-cyan-400" />
+                                                        {exp.company}
+                                                    </p>
+                                                </div>
+                                                {exp.duration && (
+                                                    <span className="text-sm text-zinc-400 flex items-center bg-zinc-900 px-3 py-1 rounded-full">
+                                                        <Calendar className="w-4 h-4 mr-2" />
+                                                        {exp.duration}
+                                                    </span>
+                                                )}
                                             </div>
-                                            <span className="text-sm text-zinc-400 flex items-center bg-zinc-900 px-3 py-1 rounded-full">
-                                                <Calendar className="w-4 h-4 mr-2" />
-                                                {exp.duration}
-                                            </span>
+                                            {exp.description && (
+                                                <p className="text-zinc-300 leading-relaxed">{exp.description}</p>
+                                            )}
                                         </div>
-                                        {exp.description && (
-                                            <p className="text-zinc-300 leading-relaxed">{exp.description}</p>
+
+                                        {/* Connection line */}
+                                        {index < profile.experiences.length - 1 && (
+                                            <div className="w-px h-6 bg-gradient-to-b from-zinc-800 to-transparent mx-6 my-2"></div>
                                         )}
                                     </div>
-
-                                    {/* Connection line */}
-                                    {index < profile.experiences.length - 1 && (
-                                        <div className="w-px h-6 bg-gradient-to-b from-zinc-800 to-transparent mx-6 my-2"></div>
-                                    )}
+                                ))
+                            ) : (
+                                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6 text-center">
+                                    <p className="text-zinc-400">No experience information available</p>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
                 </div>
@@ -267,6 +423,11 @@ const SearchPage = () => {
                                 variant="outline"
                                 size="sm"
                                 className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-[#22D3EE] to-[#006ADC] border-0 hover:opacity-90 text-white"
+                                onClick={() => {
+                                    if (searchQuery.trim()) {
+                                        performSearch(searchQuery.trim());
+                                    }
+                                }}
                             >
                                 <Search className="w-4 h-4" />
                             </Button>
@@ -274,6 +435,25 @@ const SearchPage = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Error State */}
+            {error && (
+                <div className="max-w-6xl mx-auto px-4 pb-8">
+                    <div className="bg-red-950 border border-red-800 rounded-lg p-6 text-center">
+                        <div className="text-red-400 mb-4">
+                            <X className="w-12 h-12 mx-auto mb-4" />
+                            <h3 className="text-xl font-medium mb-2">Search Error</h3>
+                            <p className="text-red-300">{error}</p>
+                        </div>
+                        <Button
+                            onClick={retrySearch}
+                            className="bg-red-800 hover:bg-red-700 text-white border-red-700"
+                        >
+                            Try Again
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* Search Results */}
             {searchResults.length > 0 && (
@@ -283,7 +463,7 @@ const SearchPage = () => {
                             Select Users
                         </h2>
                         <span className="text-transparent bg-clip-text bg-gradient-to-br from-[#22D3EE] to-[#006ADC] font-medium">
-                            {searchResults.length * 20} people
+                            {searchResults.length} people found
                         </span>
                     </div>
 
@@ -325,7 +505,7 @@ const SearchPage = () => {
             )}
 
             {/* Empty State */}
-            {!searchQuery && (
+            {!searchQuery && !isSearching && (
                 <div className="text-center py-24 px-4">
                     <div className="text-zinc-500 mb-6">
                         <Search className="w-20 h-20 mx-auto mb-6 opacity-50" />
@@ -347,6 +527,21 @@ const SearchPage = () => {
                         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#22D3EE]/20 to-[#006ADC]/20 blur-xl"></div>
                     </div>
                     <p className="text-zinc-400 text-lg">Searching for connections...</p>
+                </div>
+            )}
+
+            {/* No Results State */}
+            {searchQuery && !isSearching && searchResults.length === 0 && !error && (
+                <div className="text-center py-24 px-4">
+                    <div className="text-zinc-500 mb-6">
+                        <Search className="w-20 h-20 mx-auto mb-6 opacity-50" />
+                        <h3 className="text-xl font-medium mb-2 text-transparent bg-clip-text bg-gradient-to-br from-white to-zinc-400">
+                            No results found
+                        </h3>
+                        <p className="text-zinc-400">
+                            Try adjusting your search terms or criteria
+                        </p>
+                    </div>
                 </div>
             )}
         </div>
