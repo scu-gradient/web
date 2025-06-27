@@ -19,11 +19,11 @@ const SearchPage = () => {
     const transformApiResponse = (apiData) => {
         // Handle both single profile and array of profiles
         const profiles = Array.isArray(apiData) ? apiData : [apiData];
-        
+
         return profiles.map((profile, index) => {
             // Extract experiences from the flat structure
             const experiences = [];
-            
+
             // Extract experience 1
             if (profile.experience_1_title || profile.experience_1_company) {
                 experiences.push({
@@ -33,7 +33,7 @@ const SearchPage = () => {
                     description: profile.experience_1_description || ''
                 });
             }
-            
+
             // Extract experience 2
             if (profile.experience_2_title || profile.experience_2_company) {
                 experiences.push({
@@ -43,7 +43,7 @@ const SearchPage = () => {
                     description: profile.experience_2_description || ''
                 });
             }
-            
+
             // Extract experience 3
             if (profile.experience_3_title || profile.experience_3_company) {
                 experiences.push({
@@ -53,7 +53,7 @@ const SearchPage = () => {
                     description: profile.experience_3_description || ''
                 });
             }
-            
+
             // Add current role as first experience if different
             if (profile.current_role_title || profile.current_role_company) {
                 const currentRole = {
@@ -62,17 +62,17 @@ const SearchPage = () => {
                     duration: profile.current_role_duration || '',
                     description: profile.current_role_description || ''
                 };
-                
+
                 // Check if current role is different from existing experiences
-                const isDuplicate = experiences.some(exp => 
+                const isDuplicate = experiences.some(exp =>
                     exp.title === currentRole.title && exp.company === currentRole.company
                 );
-                
+
                 if (!isDuplicate) {
                     experiences.unshift(currentRole);
                 }
             }
-            
+
             // Build education string
             let education = '';
             if (profile.highest_education_degree || profile.highest_education_school) {
@@ -84,7 +84,7 @@ const SearchPage = () => {
                     education += ` - ${profile.highest_education_field}`;
                 }
             }
-            
+
             return {
                 id: profile.id || `profile_${index}`,
                 name: profile.full_name || profile.name || 'Unknown',
@@ -131,7 +131,7 @@ const SearchPage = () => {
 
             // Transform the API response to match frontend format
             let transformedResults = [];
-            
+
             if (data.results && Array.isArray(data.results)) {
                 // API returns { results: [...] } format
                 transformedResults = transformApiResponse(data.results);
@@ -243,24 +243,9 @@ const SearchPage = () => {
             await searchProfiles(query);
         } catch (error) {
             console.log('API search failed, attempting to fall back to another method:', error);
-            await searchProfilesFromFirestore(query); 
+            await searchProfilesFromFirestore(query);
         }
     };
-
-    // Debounced search effect
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (searchQuery.trim()) {
-                performSearch(searchQuery.trim());
-            } else {
-                setSearchResults([]);
-                setTotalProfiles(0);
-                setError(null);
-            }
-        }, 500);
-
-        return () => clearTimeout(timeoutId);
-    }, [searchQuery]);
 
     if (selectedProfile) {
         const profile = selectedProfile.fullProfile || {};
@@ -417,8 +402,14 @@ const SearchPage = () => {
                                 placeholder="product managers in big tech"
                                 value={searchQuery}
                                 onChange={(e) => handleSearch(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && searchQuery.trim()) {
+                                        performSearch(searchQuery.trim());
+                                    }
+                                }}
                                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-12 pr-16 py-4 text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-lg"
                             />
+
                             <Button
                                 variant="outline"
                                 size="sm"
